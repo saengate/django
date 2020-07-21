@@ -41,6 +41,8 @@ createadmin()
     echo "${GREEN}Creando administrador django${NC}";
     echo "${RED}Requiere que la base de datos este arriba${NC}";
     django-migrate;
+    source {{ path_venv }}/bin/activate;
+    cd {{ home }}/{{ project_name }};
     echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('{{django_user}}', '{{django_email}}', '{{django_password}}')" | ./manage.py shell;
 }
 

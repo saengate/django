@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 
 # C extensions
 *.so
@@ -106,7 +107,6 @@ venv.bak/
 *.csv
 /.gitignore~
 /README.md~
-.vscode/
 .idea/
 .DS_Store
 

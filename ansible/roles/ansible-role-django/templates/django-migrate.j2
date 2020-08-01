@@ -7,6 +7,7 @@ main()
     cd {{ home }}/{{ project_name }};
     ./manage.py makemigrations --noinput;
     ./manage.py migrate --noinput;
+    ./manage.py migrate --run-syncdb;
     ./manage.py collectstatic --noinput;
     ./manage.py install_labels;
 }

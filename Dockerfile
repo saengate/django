@@ -2,7 +2,7 @@ FROM nginx:stable as base-develop
 
 RUN apt-get update -q
 RUN apt-get install -qy python3-pip python3-venv python3-dev openssh-server openssh-client
-RUN apt-get install -y nano curl supervisor libpq-dev apt-utils gettext netcat apt-utils
+RUN apt-get install -y nano curl supervisor libpq-dev apt-utils gettext apt-utils
 RUN pip3 install --upgrade pip
 RUN pip3 install ansible virtualenv
 

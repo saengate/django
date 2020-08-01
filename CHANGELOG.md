@@ -10,6 +10,10 @@ y este proyecto adhiere a [Semantic Versioning](http://semver.org/spec/v2.0.0.ht
 ### Feature
 - [Descripción.](https://github.com/saengate/django/pull/#)
 
+## [0.1.2] - 2020-08-01
+### Feature
+- [Limpiando archivos pyc del gitignore y arregla distintis errores de configuración.](https://github.com/saengate/django/pull/2)
+
 ## [0.1.1] - 2020-07-21
 ### Feature
 - [Limpiando archivos pyc.](https://github.com/saengate/django/pull/1)

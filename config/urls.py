@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
 
 from django.conf.urls import (
     url,
@@ -29,7 +30,23 @@ urlpatterns = [
     url('', include('ses.urls', namespace='ses')),
 ]
 
-urlpatterns += static(
-    settings.MEDIA_URL,
-    document_root=settings.MEDIA_ROOT,
-)
+if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    from django.conf.urls.static import static
+    from django.views.generic.base import RedirectView
+
+    # tell gunicorn where static files are in dev mode
+    urlpatterns += staticfiles_urlpatterns()
+    urlpatterns += static(
+        settings.MEDIA_URL + 'images/',
+        document_root=os.path.join(settings.MEDIA_ROOT, 'images'),
+    )
+    urlpatterns += static(
+        settings.STATIC_URL, document_root=os.path.join(settings.STATIC_ROOT),
+    )
+    urlpatterns += [
+        url('favicon.ico$', RedirectView.as_view(
+                    url=settings.STATIC_URL + 'ses/images/favicon.ico'
+                ),
+            ),
+    ]

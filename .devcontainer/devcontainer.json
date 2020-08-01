@@ -1,0 +1,105 @@
+// For format details, see https://aka.ms/vscode-remote/devcontainer.json or this file's README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.128.0/containers/docker-existing-dockerfile
+{
+	"name": "Existing Dockerfile",
+
+	// Sets the run context to one level up instead of the .devcontainer folder.
+	"context": "..",
+
+	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+	"dockerFile": "../Dockerfile",
+	"appPort": 7000,
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.explorerKind": "external",
+		"python.linting.enabled": true,
+		"python.linting.pylintArgs": [
+			"--enable=W0614",
+			"--load-plugins",
+			"pylint_django"
+		],
+		"python.linting.flake8Args": [
+			"--max-line-length=100",
+		],
+		"python.pythonPath": "/opt/venv/bin/python3",
+		"python.linting.flake8Enabled": true,
+
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"python.formatting.autopep8Path": "/opt/venv/bin/autopep8",
+		"python.linting.flake8Path": "/opt/venv/bin/flake8",
+
+		"editor.formatOnSave": true,
+		"editor.rulers": [
+			80,
+			100
+		],
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			".vscode": true,
+			"**/*.pyc": true,
+		},
+		"workbench.editor.enablePreview": false,
+	},
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"vscoss.vscode-ansible",
+		"steoates.autoimport",
+		"hookyqr.beautify",
+		"bungcip.better-toml",
+		"shamanu4.django-intellisense",
+		"tobermory.es6-string-html",
+		"mrorz.language-gettext",
+		"ecmel.vscode-html-css",
+		"tht13.html-preview-vscode",
+		"yzhang.markdown-all-in-one",
+		"eg2.vscode-npm-script",
+		"ms-python.python",
+		"foxundermoon.shell-format",
+		"formulahendry.terminal",
+		"octref.vetur",
+		"qinjia.view-in-browser",
+		"jcbuisson.vue",
+		"liuji-jim.vue",
+		"hollowtree.vue-snippets",
+		"sdras.vue-vscode-snippets",
+		"mishannn.vuex-suggest",
+		"redhat.vscode-yaml",
+		"donjayamanne.githistory",
+		"eamodio.gitlens",
+		"vector-of-bool.gitflow",
+		"batisteo.vscode-django",
+		"sid200026.django-snippets",
+		"visualstudioexptteam.vscodeintellicode",
+		"magicstack.magicpython"
+
+		// No son compatibles con contenedores
+		// "truman.autocomplate-shell",
+		// "wcwhitehead.bootstrap-3-snippets",
+		// "thebarkman.vscode-djaneiro",
+		// "bigonesystems.django",
+		// "bibhasdn.django-snippets",
+		// "abusaidm.html-snippets",
+		// "frhtylcn.pythonsnippets"
+	]
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line to run commands after the container is created - for example installing curl.
+	// "postCreateCommand": "apt-get update && apt-get install -y curl",
+
+	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
+	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+
+	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
+	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
+
+	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+	// "remoteUser": "vscode"
+}

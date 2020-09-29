@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
+import pygments.formatters
 import os
 
 from os import getenv
 from rest_framework import compat
+
 
 from utils.color_logging import formatter
 
@@ -49,10 +51,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'channels',
     'django_neomodel',
     'easyaudit',
+    'django_extensions',
+
     'ses',
 ]
 
@@ -131,7 +136,7 @@ DATABASES = {
         'PASSWORD': 'password',
         'HOST': 'djfullapp-db',
         'PORT': '5432',
-    }
+    },
 }
 
 
@@ -193,7 +198,9 @@ LOCALE_PATHS = [
 LANGUAGE_CODE = 'es-cl'
 # LANGUAGE_CODE = 'en-us'
 
-_ = lambda s: s  # NOQA
+
+def _(s): return s  # NOQA
+
 
 LANGUAGES = [
     ('es', _('Espanish')),
@@ -286,7 +293,7 @@ DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = True
 # This is reserved for future use (does not do anything yet) 1.2.2
 # DJANGO_EASY_AUDIT_USER_DB_CONSTRAINT = 'default'
 
-# DJANGO_EASY_AUDIT_CRUD_EVENT_LIST_FILTER = ['event_type', 'content_type', 'user', 'datetime', ] 
+# DJANGO_EASY_AUDIT_CRUD_EVENT_LIST_FILTER = ['event_type', 'content_type', 'user', 'datetime', ]
 # DJANGO_EASY_AUDIT_LOGIN_EVENT_LIST_FILTER = ['login_type', 'user', 'datetime', ]
 # DJANGO_EASY_AUDIT_REQUEST_EVENT_LIST_FILTER = ['method', 'user', 'datetime', ]
 
@@ -299,3 +306,39 @@ DJANGO_EASY_AUDIT_CRUD_EVENT_NO_CHANGED_FIELDS_SKIP = True
 DJANGO_EASY_AUDIT_READONLY_EVENTS = True
 
 # DJANGO_EASY_AUDIT_LOGGING_BACKEND = 'easyaudit.backends.ModelBackend'
+
+# https://django-extensions.readthedocs.io/en/latest/shell_plus.html
+# ./manage.py shell_plus --notebook
+# Always use IPython for shell_plus
+SHELL_PLUS = "ipython"
+SHELL_PLUS_PRINT_SQL = True
+# Truncate sql queries to this number of characters (this is the default)
+SHELL_PLUS_PRINT_SQL_TRUNCATE = 1000
+# To disable truncation of sql queries use
+SHELL_PLUS_PRINT_SQL_TRUNCATE = None
+# Specify sqlparse configuration options when printing sql queries to the console
+SHELL_PLUS_SQLPARSE_FORMAT_KWARGS = dict(
+    reindent_aligned=True,
+    truncate_strings=500,
+)
+
+# Specify Pygments formatter and configuration options when printing sql queries to the console
+SHELL_PLUS_PYGMENTS_FORMATTER = pygments.formatters.TerminalFormatter
+SHELL_PLUS_PYGMENTS_FORMATTER_KWARGS = {}
+
+# Additional IPython arguments to use
+IPYTHON_ARGUMENTS = [
+    '--ext', 'django_extensions.management.notebook_extension',
+    '--debug',
+]
+
+IPYTHON_KERNEL_DISPLAY_NAME = "Django Shell-Plus"
+# Additional Notebook arguments to use
+NOTEBOOK_ARGUMENTS = []
+NOTEBOOK_KERNEL_SPEC_NAMES = ["python3", "python"]
+
+NOTEBOOK_ARGUMENTS = [
+    '--allow-root',
+    '--ip', '0.0.0.0',
+    '--port', '7001',
+]

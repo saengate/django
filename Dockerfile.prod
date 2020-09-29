@@ -1,4 +1,4 @@
-FROM nginx:stable as base-develop
+FROM nginx:stable as base-prod
 
 RUN apt-get update -q
 RUN apt-get install -qy python3-pip python3-venv python3-dev openssh-server openssh-client
@@ -31,7 +31,7 @@ COPY ./pyproject.toml ./
 COPY ./ ./django
 
 RUN sed -i 's|#!/usr/bin/env python|#!/usr/bin/env python3|g' ~/.poetry/bin/poetry
-RUN poetry export -n --without-hashes -f requirements.txt -o /tmp/requirements.txt --dev
+RUN poetry export -n --without-hashes -f requirements.txt -o /tmp/requirements.txt
 
 WORKDIR /tmp/ansible
 RUN service ssh start && ssh-keyscan -H localhost >> ~/.ssh/known_hosts && ansible-playbook config-django.yml

@@ -1,3 +1,3 @@
 #!/bin/bash
 source {{ path_venv }}/bin/activate
-exec airflow worker -q queue-{{ item }} -D
+airflow worker -q airflow-queue-{{ item }}

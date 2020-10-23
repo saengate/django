@@ -39,7 +39,7 @@ stdout_logfile=/var/log/airflow/airflow-stdout.log
 stderr_logfile=/var/log/airflow/airflow-stderr.log
 environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
 
-[program:airflowscheduler]
+[program:airflow-scheduler]
 # command={{ path_venv }}/bin/airflow scheduler -p
 command=airflow-scheduler
 stopsignal=QUIT
@@ -50,35 +50,6 @@ stdout_logfile=/var/log/airflow/airflow-scheduler-stdout.log
 stderr_logfile=/var/log/airflow/airflow-scheduler-stderr.log
 environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
 autorestart=true
-
-
-{% for queue in queue_names %}
-
-[program:queue_{{ queue }}]
-# command={{ path_venv }}/bin/airflow worker -q queue-{{ queue }}
-command=airflow-queue-{{ queue }}
-stopsignal=QUIT
-stopasgroup=true
-killasgroup=true
-user=root
-stdout_logfile=/var/log/airflow/airflow-scheduler-queue-{{ queue }}.log
-stderr_logfile=/var/log/airflow/airflow-scheduler-queue-{{ queue }}.log
-environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
-autorestart=true
-
-{% endfor %}
-
-# [program:queue_q2]
-# command={{ path_venv }}/bin/airflow worker -q queue_q2
-# command=airflow-queue_q2
-# stopsignal=QUIT
-# stopasgroup=true
-# killasgroup=true
-# user=root
-# stdout_logfile=/var/log/airflow/airflow-scheduler-queue_q2.log
-# stderr_logfile=/var/log/airflow/airflow-scheduler-queue_q2.log
-# environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
-# autorestart=true
 
 [program:flower]
 # command={{ path_venv }}/bin/airflow flower
@@ -91,3 +62,37 @@ stdout_logfile=/var/log/airflow/airflow-flower.log
 stderr_logfile=/var/log/airflow/airflow-flower.log
 environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
 autorestart=true
+
+{% if node_worker_active == 'False' %}
+
+[program:airflow-worker]
+# command={{ path_venv }}/bin/airflow worker -q airflow-worker
+command=airflow-worker
+stopsignal=QUIT
+stopasgroup=true
+killasgroup=true
+user=root
+startsecs=0
+stdout_logfile=/var/log/airflow/airflow-worker.log
+stderr_logfile=/var/log/airflow/airflow-worker.log
+environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
+autorestart=true
+
+{% for queue in queue_names %}
+
+[program:queue-{{ queue }}]
+# command={{ path_venv }}/bin/airflow worker -q airflow-queue-{{ queue }}
+command=airflow-queue-{{ queue }}
+stopsignal=QUIT
+stopasgroup=true
+killasgroup=true
+user=root
+startsecs=0
+stdout_logfile=/var/log/airflow/airflow-scheduler-queue-{{ queue }}.log
+stderr_logfile=/var/log/airflow/airflow-scheduler-queue-{{ queue }}.log
+environment=HOME="/usr/local/airflow",AIRFLOW_HOME="/usr/local/airflow",TMPDIR="/storage/airflow_tmp",PATH="{{ path_venv }}/bin/airflow:%(ENV_PATH)s"
+autorestart=true
+
+{% endfor %}
+
+{% endif %}

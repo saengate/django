@@ -2,7 +2,7 @@
 group: "{{ vault_group }}"
 user: "{{ vault_user }}"
 home: "{{ vault_home }}"
-path_venv: "/opt/venv"  # Recuerda modificar travis si cambias este valor
+path_venv: "/opt/venv" # Recuerda modificar travis si cambias este valor
 
 # Estas contraseñas deben coincidir con las postgres
 database_name: "{{ vault_database_name }}"
@@ -10,11 +10,11 @@ postgresql_user: "{{ vault_postgresql_user }}"
 postgresql_password: "{{ vault_postgresql_password }}"
 
 # Configuraciones AIRFLOW
-host_airflow: http://localhost:8080
-web_server_host: 0.0.0.0
+host_airflow: http://web:8080
+web_server_host: web
 web_server_port: 8080
 redis: redis://redis:6379
-flower_host: 0.0.0.0
+flower_host: web
 flower_port: 5555
 queue_names:
   - queue_1
@@ -24,6 +24,7 @@ queue_names:
 django_user: "{{ vault_django_user }}"
 django_email: "{{ vault_django_email }}"
 django_password: "{{ vault_django_password }}"
+django_settings: config.settings.local
 
 # SUPERVISOR config
 web_socket: tcp://0.0.0.0:8003
@@ -31,4 +32,9 @@ web_socket: tcp://0.0.0.0:8003
 # NGINX config
 server_name: localhost 127.0.0.1
 origin: http://localhost:8003
-...
+
+os_environment:
+  - key: SECRET_KEY
+    value: "e7(sinr28hr10@9(+765wd&*0jjl%_qj1sxckjw!ssn^x0dm7@"
+  - key: ENV
+    value: local

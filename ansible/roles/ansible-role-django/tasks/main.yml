@@ -1,165 +1,195 @@
 ---
 - block:
+    - name: Checkea si existe el servicio supervisor
+      stat: path=/etc/init.d/supervisor
+      register: supervisor_status
 
-  - name: stop supervisor
-    service:
-      name: supervisor
-      state: stopped
+    - name: stop supervisor
+      service:
+        name: supervisor
+        state: stopped
+      when: supervisor_status.stat.exists
 
-  - name: Asegurar que el grupo {{ group }} exista
-    group:
-      name: "{{ group }}"
-      state: present
+    - name: Asegurar que el grupo {{ group }} exista
+      group:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - "{{ group }}"
 
-  - name: Agregar el usuario {{ user }} con el grupo especifico {{ group }}
-    user:
-      name: "{{ user }}"
-      uid: 1040
-      group: "{{ group }}"
-      home: "{{ home }}"
-      system: yes
-      shell: /bin/bash
+    - name: Agregar el usuario {{ user }} con el grupo especifico {{ group }}
+      user:
+        name: "{{ user }}"
+        uid: 1040
+        group: "{{ group }}"
+        home: "{{ home }}"
+        system: yes
+        shell: /bin/bash
 
-  - name: Valida carpetas de necesarias para el projecto
-    stat:
-      path: "{{ item }}"
-    register: folder_stats
-    with_items:
-      - "{{ home }}/{{ project_name }}"
-      - /var/log/airflow
-      - "/var/log/{{ project_name }}"
-      - /etc/nginx/sites-enabled
-      - /etc/nginx/sites-available
-      - /usr/local/airflow
+    - name: populate /etc/environment
+      lineinfile:
+        path: "/etc/environment"
+        state: present
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value}}"
+      with_items: "{{ os_environment }}"
 
-  - name: Crear carpetas de necesarias para el projecto
-    file:
-      path: "{{ item.item }}"
-      state: directory
-    when: item.stat.exists == false
-    with_items:
-      - "{{folder_stats.results}}"
+    - name: Valida carpetas de necesarias para el projecto
+      stat:
+        path: "{{ item }}"
+      register: folder_stats
+      with_items:
+        - "{{ home }}/{{ project_name }}"
+        - /var/log/airflow
+        - "/var/log/{{ project_name }}"
+        - /etc/nginx/sites-enabled
+        - /etc/nginx/sites-available
+        - /usr/local/airflow
 
-  - name: Da permisos al directorio {{ home }}
-    file:
-      path: "{{ home }}"
-      recurse: yes
-      owner: "{{ user }}"
-      group: "{{ group }}"
+    - name: Crear carpetas de necesarias para el projecto
+      file:
+        path: "{{ item.item }}"
+        state: directory
+      when: item.stat.exists == false
+      with_items:
+        - "{{folder_stats.results}}"
 
-  - name: Mover directorio a {{ project_name }}/{{ project_name }}
-    command: mv /tmp/django "{{ home }}"
+    - name: Da permisos al directorio {{ home }}
+      file:
+        path: "{{ home }}"
+        recurse: yes
+        owner: "{{ user }}"
+        group: "{{ group }}"
 
-  - name: Creando archivo de log para el projecto
-    file:
-      path: "/var/log/{{ project_name }}/{{ project_name }}.log"
-      state: touch
-      mode: 0766
+    - name: Valida si la carpeta django esta en tmp
+      stat:
+        path: /tmp/django
+      register: django_folder
 
-  - name: Instalar requerimientos de {{ project_name }}
-    pip:
-      requirements: /tmp/requirements.txt
-      virtualenv: "{{ path_venv }}"
-      virtualenv_python: python3
-      extra_args: --no-cache-dir
+    - name: Mover directorio a {{ project_name }}/{{ project_name }}
+      command: mv /tmp/django "{{ home }}"
+      when: django_folder.stat.exists == true
+
+    - name: Creando archivo de log para el projecto
+      file:
+        path: "/var/log/{{ project_name }}/{{ project_name }}.log"
+        state: touch
+        mode: 0766
+
+    - name: Instalar requerimientos de {{ project_name }}
+      pip:
+        requirements: /tmp/requirements.txt
+        virtualenv: "{{ path_venv }}"
+        virtualenv_python: python3
+        extra_args: --no-cache-dir
+
+    - name: Permisos a logs
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        recurse: yes
+      with_items:
+        - /var/log/airflow
+        - "/var/log/{{ project_name }}"
 
 - block:
-  - name: Airflow | Update configuration (airflow.cfg)
-    template:
-      src: airflow.cfg.j2
-      dest: "/usr/local/airflow/airflow.cfg"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0644
+    - name: Airflow | Update configuration (airflow.cfg)
+      template:
+        src: airflow.cfg.j2
+        dest: "/usr/local/airflow/airflow.cfg"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0644
 
-  - name: Preparando los disparadores de la aplicacion
-    template:
-      src: "{{ item }}.j2"
-      dest: "/usr/local/bin/{{ item }}"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0755
-    with_items:
-      - django_start
-      - django_websocket_start
-      - airflow-flower
-      - airflow-scheduler
-      - airflow-server
-      - airflow-queue
-      - django-migrate
-      - django-messages
-      - cmdp
-      - venv
-      - runsupervisor
-      - wait-for-it
+    - name: Preparando los disparadores de la aplicacion
+      template:
+        src: "{{ item }}.j2"
+        dest: "/usr/local/bin/{{ item }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0755
+      with_items:
+        - django_start
+        - django_websocket_start
+        - airflow-flower
+        - airflow-scheduler
+        - airflow-server
+        - airflow-worker
+        - django-migrate
+        - django-messages
+        - cmdp
+        - venv
+        - runsupervisor
+        - wait-for-it
 
-  - name: Inicializa variable programas
-    set_fact:
-      queues: "{{ lookup('template', 'queue_vars.yml.j2') | from_yaml }}"
+    - name: Inicializa variable programas
+      set_fact:
+        queues: "{{ lookup('template', 'queue_vars.yml.j2') | from_yaml }}"
 
-  - name: Preparando los disparadores para las colas
-    template:
-      src: airflow-queue.j2
-      dest: "/usr/local/bin/airflow-queue-{{ item }}"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0755
-    with_items:
-      - "{{ queues }}"
+    - name: Preparando los disparadores para las colas
+      template:
+        src: airflow-queue.j2
+        dest: "/usr/local/bin/airflow-queue-{{ item }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0755
+      with_items:
+        - "{{ queues }}"
 
-  - name: Supervisor app | Update configuration (app.supervisor.conf)
-    template:
-      src: django.supervisor.conf.j2
-      dest: "/etc/supervisor/conf.d/programs.conf"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0644
+    - name: Supervisor app | Update configuration (app.supervisor.conf)
+      template:
+        src: django.supervisor.conf.j2
+        dest: "/etc/supervisor/conf.d/programs.conf"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0644
 
-  - name: Supervisor | crea las configuraciones
-    command: echo_supervisord_conf > /etc/supervisord.conf
-  
-  - name: Supervisor | Update configuration (supervisor.conf)
-    template:
-      src: supervisord.conf.j2
-      dest: "/etc/supervisor/supervisord.conf"
-      owner: root
-      group: root
-      mode: 0644
+    - name: Supervisor | crea las configuraciones
+      command: echo_supervisord_conf > /etc/supervisord.conf
 
-  - name: Nginx | Update configuration (nginx.conf)
-    template:
-      src: nginx.conf.j2
-      dest: "/etc/nginx/sites-available/{{ project_name }}.conf"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0655
+    - name: Supervisor | Update configuration (supervisor.conf)
+      template:
+        src: supervisord.conf.j2
+        dest: "/etc/supervisor/supervisord.conf"
+        owner: root
+        group: root
+        mode: 0644
 
-  - name: Nginx timeout | Update configuration (timeout.conf)
-    template:
-      src: timeout.conf.j2
-      dest: "/etc/nginx/conf.d/timeout.conf"
-      owner: "{{ user }}"
-      group: "{{ group }}"
-      mode: 0644
+    - name: Nginx | Update configuration (nginx.conf)
+      template:
+        src: nginx.conf.j2
+        dest: "/etc/nginx/sites-available/{{ project_name }}.conf"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0655
 
-  - name: Create symbolic link NGINX
-    file:
-      src: "/etc/nginx/sites-available/{{ project_name }}.conf"
-      dest: "{{ item }}"
-      state: link
-    with_items:
-      - "/etc/nginx/sites-enabled/{{ project_name }}.conf"
-      - "/etc/nginx/conf.d/{{ project_name }}.conf"
+    - name: Nginx timeout | Update configuration (timeout.conf)
+      template:
+        src: timeout.conf.j2
+        dest: "/etc/nginx/conf.d/timeout.conf"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: 0644
 
-  - name: Create symbolic link airflow dags
-    file:
-      src: "{{ home }}/{{ project_name }}/airflow/dags"
-      dest: "/usr/local/airflow/dags"
-      force: yes
-      state: link
+    - name: Create symbolic link NGINX
+      file:
+        src: "/etc/nginx/sites-available/{{ project_name }}.conf"
+        dest: "{{ item }}"
+        state: link
+      with_items:
+        - "/etc/nginx/sites-enabled/{{ project_name }}.conf"
+        - "/etc/nginx/conf.d/{{ project_name }}.conf"
 
-  - name: Remove Nginx file default file
-    file:
-      path: /etc/nginx/conf.d/default.conf
-      state: absent
-...
+    - name: Create symbolic link airflow dags
+      file:
+        src: "{{ home }}/{{ project_name }}/airflow/dags"
+        dest: "/usr/local/airflow/dags"
+        force: yes
+        state: link
+
+    - name: Remove Nginx file default file
+      file:
+        path: /etc/nginx/conf.d/default.conf
+        state: absent

@@ -4,7 +4,7 @@ RUN apt-get update -q
 RUN apt-get install -qy python3-pip python3-venv python3-dev openssh-server openssh-client
 RUN apt-get install -y nano curl supervisor libpq-dev apt-utils gettext apt-utils git
 RUN pip3 install --upgrade pip
-RUN pip3 install ansible virtualenv
+RUN pip3 install ansible==2.9 virtualenv
 
 # Install and configure SSH
 RUN mkdir /var/run/sshd
@@ -35,6 +35,10 @@ RUN poetry export -n --without-hashes -f requirements.txt -o /tmp/requirements.t
 
 WORKDIR /tmp/ansible
 RUN service ssh start && ssh-keyscan -H localhost >> ~/.ssh/known_hosts && ansible-playbook config-django.yml
+
+# Change UTC
+ENV TZ="America/Santiago"
+
 # Directorio del proyecto, debe modificarse si se cambia el directorio original
 # Su cambio provocara un fallo en travis
 WORKDIR /webapps/django
@@ -42,12 +46,12 @@ EXPOSE 22 80 5555 7000 7001 8080
 
 # Se sobreescribe en el docker-compose.yml para ejecutar las migraciones
 CMD [   "bash",                         \
-        "-c",                           \
-        "service supervisor start &&    \
-        supervisorctl reread &&         \
-        supervisorctl update &&         \
-        supervisorctl start all &&      \
-        service ssh start &&            \
-        service nginx start &&          \
-        /bin/bash"                      \
+    "-c",                           \
+    "service supervisor start &&    \
+    supervisorctl reread &&         \
+    supervisorctl update &&         \
+    supervisorctl start all &&      \
+    service ssh start &&            \
+    service nginx start &&          \
+    /bin/bash"                      \
     ]
